@@ -1,0 +1,25 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+.venv/
+venv/
+env/
+
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+.env
+*.log
+
+# Harness output: regenerate with `make eval`, do not commit machine-specific numbers.
+eval/results.json
+
+.idea/
+.vscode/
+.DS_Store
