@@ -1,0 +1,64 @@
+name: rag-service
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kestrel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kestrel}
+      POSTGRES_DB: ${POSTGRES_DB:-kestrel}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # pg_isready comes up before the database finishes recovery, so the interval is
+      # short and start_period generous rather than the other way round.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kestrel} -d ${POSTGRES_DB:-kestrel}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:0.12.11
+    volumes:
+      - ollama-models:/root/.ollama
+    ports:
+      - "127.0.0.1:11434:11434"
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      # Loading a model into memory on a cold start is minutes, not seconds.
+      start_period: 120s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      target: runtime
+    environment:
+      RAG_CONFIG: ${RAG_CONFIG:-config/pgvector.yaml}
+      RAG_PG_DSN: ${RAG_PG_DSN:-postgresql://kestrel:kestrel@postgres:5432/kestrel}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      # /health answers "empty" until something is indexed, which is still healthy:
+      # an empty index is a valid state for a freshly started service.
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  ollama-models:
