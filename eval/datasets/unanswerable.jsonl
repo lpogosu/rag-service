@@ -1,0 +1,8 @@
+{"qid": "unanswerable.01", "question": "Сколько стоит коммерческая лицензия Kestrel?"}
+{"qid": "unanswerable.02", "question": "Поддерживает ли Kestrel хранение событий в S3?"}
+{"qid": "unanswerable.03", "question": "Как настроить географическую репликацию между дата-центрами?"}
+{"qid": "unanswerable.04", "question": "Какой SLA даёт команда сопровождения Kestrel?"}
+{"qid": "unanswerable.05", "question": "Есть ли у Kestrel клиентская библиотека для Rust?"}
+{"qid": "unanswerable.06", "question": "How do I enable exactly-once delivery in Kestrel?"}
+{"qid": "unanswerable.07", "question": "Какая версия Kestrel поддерживает Windows Server?"}
+{"qid": "unanswerable.08", "question": "Как импортировать данные из Kafka в Kestrel одной командой?"}
