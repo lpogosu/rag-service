@@ -1,0 +1,50 @@
+# Local development: real embeddings and a real generator from Ollama, data in memory.
+# Nothing is persisted, so `make index` has to run again after a restart.
+name: default
+
+chunking:
+  strategy: structural
+  options:
+    max_chars: 900
+    min_section_chars: 200
+
+embedding:
+  provider: ollama
+  model: nomic-embed-text
+  dim: 768
+  batch_size: 32
+
+store:
+  backend: memory
+  metric: cosine
+
+lexical:
+  enabled: true
+  k1: 1.5
+  b: 0.75
+  use_stemming: true
+
+retrieval:
+  dense_k: 30
+  lexical_k: 30
+  final_k: 6
+  fusion:
+    method: rrf
+    k: 60
+    dense_weight: 0.5
+    lexical_weight: 0.5
+
+rerank:
+  provider: heuristic
+  top_n: 20
+
+generation:
+  provider: ollama
+  model: qwen2.5:7b-instruct
+  max_context_chars: 6000
+  temperature: 0.0
+
+ollama:
+  base_url: ${OLLAMA_BASE_URL:http://localhost:11434}
+  timeout_seconds: 120
+  max_attempts: 3

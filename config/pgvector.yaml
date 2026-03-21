@@ -1,0 +1,62 @@
+# Deployment profile: pgvector for storage, Ollama for embeddings, reranking and answers.
+# bge-m3 is chosen over nomic-embed-text here because the corpus is bilingual;
+# it costs 1024 dimensions instead of 768 and roughly twice the indexing time.
+name: pgvector
+
+chunking:
+  strategy: structural
+  options:
+    max_chars: 900
+    min_section_chars: 200
+
+embedding:
+  provider: ollama
+  model: bge-m3
+  dim: 1024
+  batch_size: 16
+
+store:
+  backend: pgvector
+  metric: cosine
+  dsn: ${RAG_PG_DSN:postgresql://kestrel:kestrel@postgres:5432/kestrel}
+  table: rag_chunks
+  hnsw:
+    m: 16
+    ef_construction: 64
+    # Must stay at or above retrieval.dense_k: an HNSW scan never returns more
+    # candidates than ef_search, whatever the LIMIT says.
+    ef_search: 64
+
+lexical:
+  enabled: true
+  k1: 1.5
+  b: 0.75
+  use_stemming: true
+
+retrieval:
+  dense_k: 40
+  lexical_k: 40
+  final_k: 6
+  fusion:
+    method: rrf
+    k: 60
+    dense_weight: 0.5
+    lexical_weight: 0.5
+
+rerank:
+  provider: ollama
+  model: qwen2.5:3b
+  top_n: 15
+
+generation:
+  provider: ollama
+  model: qwen2.5:7b-instruct
+  max_context_chars: 6000
+  max_chunk_chars: 1500
+  temperature: 0.0
+
+ollama:
+  base_url: ${OLLAMA_BASE_URL:http://ollama:11434}
+  timeout_seconds: 120
+  max_attempts: 3
+  backoff_seconds: 0.5
